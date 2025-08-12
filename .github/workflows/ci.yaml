@@ -36,6 +36,7 @@ jobs:
         env:
           MODEL_DIR: hf-internal-testing/tiny-random-t5
           PYTHONPATH: ${{ github.workspace }}/clinical-note-summarizer
+          USE_FAST_TOKENIZER: "true"
         working-directory: clinical-note-summarizer
         run: |
           pytest -q

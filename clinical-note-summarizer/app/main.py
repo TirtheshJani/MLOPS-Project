@@ -45,7 +45,13 @@ async def lifespan(app: FastAPI):
     model_src = _resolve_model_source()
     device = _get_device()
 
-    tokenizer = AutoTokenizer.from_pretrained(model_src, use_fast=False)
+    # Prefer fast tokenizers in CI/tiny model scenarios to avoid sentencepiece issues
+    use_fast_env = os.getenv("USE_FAST_TOKENIZER", "").lower() in {"1", "true", "yes"}
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(model_src, use_fast=use_fast_env)
+    except Exception:
+        # Fallback to alternate tokenizer backend if the first attempt fails
+        tokenizer = AutoTokenizer.from_pretrained(model_src, use_fast=not use_fast_env)
     model = AutoModelForSeq2SeqLM.from_pretrained(model_src)
     model.to(device)
     model.eval()
