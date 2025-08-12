@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+ENV/
+env/
+
+# Local virtualenvs
+clinical-note-summarizer/venv/
+clinical-note-summarizer/venv312/
+
+# Training artifacts, models, data
+runs/
+clinical-note-summarizer/runs/
+models/
+clinical-note-summarizer/models/
+data/
+clinical-note-summarizer/data/
+
+# Large model/checkpoint extensions
+*.safetensors
+*.pt
+*.bin
+*.dll
+*.lib
+
+# Logs
+*.log
+
+# Caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.cache/
+clinical-note-summarizer/.cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Editors/OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
