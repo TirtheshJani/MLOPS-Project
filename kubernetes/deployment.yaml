@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clinical-summarizer-deployment
+  labels:
+    app: clinical-summarizer
+spec:
+  replicas: 2
+  progressDeadlineSeconds: 1200
+  selector:
+    matchLabels:
+      app: clinical-summarizer
+  template:
+    metadata:
+      labels:
+        app: clinical-summarizer
+    spec:
+      containers:
+        - name: clinical-summarizer-app
+          image: northamerica-northeast2-docker.pkg.dev/clinicalsummarizer/clinical-summarizer-repo/clinical-summarizer-app:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: "1"
+              memory: 2Gi
+            limits:
+              cpu: "2"
+              memory: 4Gi
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            failureThreshold: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 90
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+
+

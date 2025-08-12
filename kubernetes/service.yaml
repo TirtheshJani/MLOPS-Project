@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: clinical-summarizer-service
+  labels:
+    app: clinical-summarizer
+spec:
+  type: LoadBalancer
+  selector:
+    app: clinical-summarizer
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000
+
+

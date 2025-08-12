@@ -1,0 +1,49 @@
+# VCS
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.venv
+venv
+ENV/
+env/
+
+# Jupyter
+.ipynb_checkpoints
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Build / Dist
+build/
+dist/
+*.egg-info/
+
+# Local data and artifacts not needed at build
+data/
+clinical-note-summarizer/data/
+runs/
+clinical-note-summarizer/runs/
+training.log
+uvicorn.log
+
+# Models are needed, but we ignore other large caches
+clinical-note-summarizer/.cache/
+.cache/
+cache/
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+
