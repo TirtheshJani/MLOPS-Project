@@ -35,6 +35,7 @@ jobs:
       - name: Run tests (use tiny HF model to keep CI fast)
         env:
           MODEL_DIR: hf-internal-testing/tiny-random-t5
+          PYTHONPATH: ${{ github.workspace }}/clinical-note-summarizer
         working-directory: clinical-note-summarizer
         run: |
           pytest -q
