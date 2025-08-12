@@ -1,11 +1,6 @@
 from fastapi.testclient import TestClient
-try:
-    # Prefer package import when running locally or in CI with correct PYTHONPATH
-    from app.main import app  # type: ignore
-except ModuleNotFoundError:
-    # Fallback to dynamic sys.path adjustment
-    from .context import get_app
-    app = get_app()
+from .context import get_app
+app = get_app()
 
 
 client = TestClient(app)
