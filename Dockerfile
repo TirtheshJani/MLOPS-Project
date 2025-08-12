@@ -34,9 +34,8 @@ WORKDIR /app
 # Copy only installed python packages from builder into standard location
 COPY --from=builder /install /usr/local
 
-# Copy application source code and model files (into /app to match DEFAULT_MODEL_DIR)
+# Copy application source code (models are optional and may be loaded remotely via MODEL_DIR)
 COPY --chown=appuser:app clinical-note-summarizer/app/ /app/
-COPY --chown=appuser:app models/ /app/models/
 
 # Switch to non-root user
 USER appuser
