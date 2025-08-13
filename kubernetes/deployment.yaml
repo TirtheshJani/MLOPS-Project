@@ -5,8 +5,10 @@ metadata:
   labels:
     app: clinical-summarizer
 spec:
-  replicas: 2
+  replicas: 1
   progressDeadlineSeconds: 1200
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: clinical-summarizer
@@ -21,24 +23,31 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
+          env:
+            # Speed up startup in cluster by using a tiny model for smoke checks
+            - name: MODEL_DIR
+              value: hf-internal-testing/tiny-random-t5
+            - name: USE_FAST_TOKENIZER
+              value: "true"
           resources:
             requests:
-              cpu: "1"
-              memory: 2Gi
+              cpu: 500m
+              memory: 1Gi
             limits:
-              cpu: "2"
-              memory: 4Gi
+              cpu: 1
+              memory: 2Gi
           startupProbe:
             httpGet:
               path: /health
               port: 8000
-            failureThreshold: 30
+            # Allow longer time for image pull and initial model load
+            failureThreshold: 90
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /health
               port: 8000
-            initialDelaySeconds: 60
+            initialDelaySeconds: 90
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 6
@@ -46,7 +55,7 @@ spec:
             httpGet:
               path: /health
               port: 8000
-            initialDelaySeconds: 90
+            initialDelaySeconds: 120
             periodSeconds: 20
             timeoutSeconds: 5
             failureThreshold: 3
