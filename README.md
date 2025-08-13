@@ -1,4 +1,4 @@
-# Brief Hospital Course (BHC) Summarization Service
+# Clinic Summarization Service
 
 ### Project Objective
 Build an LLM-based FastAPI service that summarizes full clinical notes into concise, accurate Brief Hospital Course (BHC) summaries suitable for discharge documentation and care transitions.
