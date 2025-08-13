@@ -9,6 +9,8 @@ function App() {
   const [latencyMs, setLatencyMs] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [includeHints, setIncludeHints] = useState(true)
+  const [compareMode, setCompareMode] = useState(true)
 
   const examples = [
     'Patient admitted for pneumonia. Treated with antibiotics and discharged in stable condition.',
@@ -22,10 +24,14 @@ function App() {
     setLoading(true); setError(null); setSummary('');
     const start = performance.now()
     try {
-      const res = await fetch((import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000') + '/summarize', {
+      const base = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000')
+      const effectiveText = includeHints
+        ? `Please highlight key diagnoses, medications, and follow-ups.\n\n${text}`
+        : text
+      const res = await fetch(base + '/summarize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, max_new_tokens: maxTokens, temperature })
+        body: JSON.stringify({ text: effectiveText, max_new_tokens: maxTokens, temperature })
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
@@ -34,11 +40,24 @@ function App() {
       const data = await res.json()
       setSummary(data.summary || '')
       setLatencyMs(Math.round(performance.now() - start))
+      console.log('summarize_ok', { inputChars: effectiveText.length, latencyMs: Math.round(performance.now() - start) })
     } catch (e) {
       setError(e.message || 'Request failed')
+      console.warn('summarize_error', e)
     } finally {
       setLoading(false)
     }
+  }
+
+  const download = (ext) => {
+    if (!summary) return
+    const blob = new Blob([summary], { type: ext === 'md' ? 'text/markdown;charset=utf-8' : 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `summary.${ext}`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   return (
@@ -82,6 +101,13 @@ function App() {
         <button onClick={summarize} disabled={loading || !text || text.length < 5}>Summarize</button>
         <button onClick={clearAll} style={{ marginLeft: 8 }}>Clear</button>
         {summary && <button style={{ marginLeft: 8 }} onClick={() => navigator.clipboard.writeText(summary)}>Copy Summary</button>}
+        {summary && <button style={{ marginLeft: 8 }} onClick={() => download('txt')}>Download .txt</button>}
+        {summary && <button style={{ marginLeft: 8 }} onClick={() => download('md')}>Download .md</button>}
+      </div>
+
+      <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 8 }}>
+        <label><input type="checkbox" checked={includeHints} onChange={(e) => setIncludeHints(e.target.checked)} /> Include prompt hints</label>
+        <label style={{ marginLeft: 16 }}><input type="checkbox" checked={compareMode} onChange={(e) => setCompareMode(e.target.checked)} /> Compare mode</label>
       </div>
 
       {loading && <p>Summarizing...</p>}
@@ -89,10 +115,31 @@ function App() {
 
       {!!summary && (
         <div style={{ marginTop: 16 }}>
-          <h3>Summary</h3>
-          <pre style={{ whiteSpace: 'pre-wrap' }}>{summary}</pre>
+          {compareMode ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div>
+                <h3>Original</h3>
+                <pre style={{ whiteSpace: 'pre-wrap', background: '#fafafa', padding: 8 }}>{text}</pre>
+              </div>
+              <div>
+                <h3>Summary</h3>
+                <pre style={{ whiteSpace: 'pre-wrap', background: '#fafafa', padding: 8 }}>{summary}</pre>
+              </div>
+            </div>
+          ) : (
+            <>
+              <h3>Summary</h3>
+              <pre style={{ whiteSpace: 'pre-wrap', background: '#fafafa', padding: 8 }}>{summary}</pre>
+            </>
+          )}
           <small>
-            {`Latency: ${latencyMs ?? '-'} ms | Input chars: ${text.length} | Output chars: ${summary.length}`}
+            {(() => {
+              const inWords = text.trim() ? text.trim().split(/\s+/).length : 0
+              const outWords = summary.trim() ? summary.trim().split(/\s+/).length : 0
+              const approxTokensIn = Math.round(inWords * 1.3)
+              const approxTokensOut = Math.round(outWords * 1.3)
+              return `Latency: ${latencyMs ?? '-'} ms | Input: ${inWords} words (~${approxTokensIn} tokens) | Output: ${outWords} words (~${approxTokensOut} tokens)`
+            })()}
           </small>
         </div>
       )}
