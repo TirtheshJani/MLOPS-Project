@@ -36,6 +36,9 @@ COPY --from=builder /install /usr/local
 
 # Copy application source code (models are optional and may be loaded remotely via MODEL_DIR)
 COPY --chown=appuser:app clinical-note-summarizer/app/ /app/
+# If a frontend has been built with Vite, include the static assets
+# Ensure you run `npm run build` inside `web/` so that `web/dist/` exists at build time
+COPY --chown=appuser:app web/dist/ /app/web/dist/
 
 # Switch to non-root user
 USER appuser
