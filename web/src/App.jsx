@@ -76,7 +76,15 @@ function App() {
         <label>Clinical Note</label>
         <textarea
           rows={10}
-          style={{ width: '100%', boxSizing: 'border-box' }}
+          style={{
+            width: '100%',
+            boxSizing: 'border-box',
+            background: '#0f172a', // dark background for readability
+            color: '#e5e7eb', // light text color
+            border: '1px solid #334155',
+            borderRadius: 6,
+            padding: 8
+          }}
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
@@ -119,17 +127,17 @@ function App() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div>
                 <h3>Original</h3>
-                <pre style={{ whiteSpace: 'pre-wrap', background: '#fafafa', padding: 8 }}>{text}</pre>
+                <pre style={{ whiteSpace: 'pre-wrap', background: '#0f172a', color: '#e5e7eb', padding: 8, border: '1px solid #334155', borderRadius: 6 }}>{text}</pre>
               </div>
               <div>
                 <h3>Summary</h3>
-                <pre style={{ whiteSpace: 'pre-wrap', background: '#fafafa', padding: 8 }}>{summary}</pre>
+                <pre style={{ whiteSpace: 'pre-wrap', background: '#0f172a', color: '#e5e7eb', padding: 8, border: '1px solid #334155', borderRadius: 6 }}>{summary}</pre>
               </div>
             </div>
           ) : (
             <>
               <h3>Summary</h3>
-              <pre style={{ whiteSpace: 'pre-wrap', background: '#fafafa', padding: 8 }}>{summary}</pre>
+              <pre style={{ whiteSpace: 'pre-wrap', background: '#0f172a', color: '#e5e7eb', padding: 8, border: '1px solid #334155', borderRadius: 6 }}>{summary}</pre>
             </>
           )}
           <small>
