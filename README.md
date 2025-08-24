@@ -56,26 +56,73 @@ Preprocess (prefix "summarize: "), tokenize (2048/256), fine‑tune FLAN‑T5, e
 - CD (`.github/workflows/cd.yaml`): build web → docker build/push (SHA, latest) → `kubectl set image` → rollout status
 
 ## Local Development
-Backend only:
+### Quickstart (Windows PowerShell)
+
+Prereqs: Python 3.11, Node.js 18+, Git, Docker Desktop (optional for container).
+
+- Backend only (FastAPI):
 ```
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -U pip
+pip install -r clinical-note-summarizer/requirements.txt
+
+# Optional: point to a local fine-tuned model (if you have one)
+$env:MODEL_DIR = "models\\flan-t5-bhc-summarizer"
+$env:USE_FAST_TOKENIZER = "1"
+
 uvicorn clinical-note-summarizer.app.main:app --reload --host 0.0.0.0 --port 8000
 ```
+Test:
+```
+Invoke-RestMethod -Method Post `
+  -Uri http://localhost:8000/summarize `
+  -ContentType 'application/json' `
+  -Body (@{ text = 'Patient presents with...' } | ConvertTo-Json)
+```
 
-Frontend dev:
+- Frontend dev (Vite):
 ```
 cd web
-echo VITE_API_BASE_URL=http://localhost:8000 > .env
+$env:VITE_API_BASE_URL = "http://localhost:8000"
 npm ci
 npm run dev
 ```
+Open `http://localhost:5173` (Vite) calling the API at `http://localhost:8000`.
 
-Single container (UI + API):
+Note: If PowerShell blocks script activation, run: `Set-ExecutionPolicy -Scope Process Bypass`.
+
+### Docker (single image: API + built UI)
+
+1) Build frontend assets so `web/dist/` exists:
 ```
-cd web && npm run build && cd ..
+cd web
+npm ci
+# Empty base URL means relative calls to the same host/port as the API
+$env:VITE_API_BASE_URL = ""
+npm run build
+cd ..
+```
+
+2) Build the image:
+```
 docker build -t clinical-summarizer-app .
+```
+
+3) Run the container:
+```
 docker run --rm -p 8000:8000 clinical-summarizer-app
 ```
-Open http://localhost:8000
+Open `http://localhost:8000`.
+
+Optional: use a local fine-tuned model without baking it into the image (Windows PowerShell path example):
+```
+docker run --rm -p 8000:8000 `
+  -e MODEL_DIR="/app/models/flan-t5-bhc-summarizer" `
+  -v "${PWD}\models:/app/models" `
+  clinical-summarizer-app
+```
+If no local model is provided, the service falls back to `google/flan-t5-base` on first request (downloads on demand).
 
 ## Production Deployment (GKE)
 New image (example):
