@@ -1,0 +1,66 @@
+[project]
+name = "clinical-note-summarizer"
+version = "0.1.0"
+description = "FLAN-T5-based MLOps service that summarizes clinical notes into patient-friendly text."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "Tirthesh Jani" }]
+keywords = ["mlops", "nlp", "healthcare", "fastapi", "transformers"]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Framework :: FastAPI",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = [
+    "web",
+    "notebooks",
+    ".venv",
+    "venv",
+    "models",
+    "data",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "B008",  # function call in default argument (common FastAPI pattern)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"clinical-note-summarizer/tests/*" = ["E402"]  # late imports after sys.path tweak
+
+[tool.pytest.ini_options]
+testpaths = ["clinical-note-summarizer/tests"]
+addopts = "-ra --strict-markers"
+pythonpath = ["clinical-note-summarizer"]
+
+[tool.coverage.run]
+source = ["clinical-note-summarizer/app"]
+omit = ["clinical-note-summarizer/tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_ignores = true
+ignore_missing_imports = true
+files = ["clinical-note-summarizer/app"]

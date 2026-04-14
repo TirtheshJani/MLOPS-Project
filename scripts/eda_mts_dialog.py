@@ -4,7 +4,6 @@ import csv
 from pathlib import Path
 from statistics import mean
 
-
 DATA_CSV = Path(
     "data/primary/mts-dialog/clinical_visit_note_summarization_corpus-main/"
     "data/mts-dialog/MTS_Dataset_TrainingSet.csv"
@@ -17,7 +16,9 @@ def tokenize_words(text: str) -> list[str]:
 
 def main() -> None:
     if not DATA_CSV.exists():
-        raise SystemExit(f"Dataset not found: {DATA_CSV}. Run scripts/download_mts_dialog.py first.")
+        raise SystemExit(
+            f"Dataset not found: {DATA_CSV}. Run scripts/download_mts_dialog.py first."
+        )
 
     num_rows = 0
     input_lengths: list[int] = []
@@ -65,10 +66,10 @@ def main() -> None:
         f.write(f"- Samples with both dialogue and section_text: {num_rows}\n")
         f.write(f"- Average dialogue length (words): {avg_dialogue_len}\n")
         f.write(f"- Average summary length (words): {avg_summary_len}\n")
-        f.write("\nNotes: Counts computed from MTS_Dataset_TrainingSet.csv; summaries use the `section_text` field.\n")
+        f.write(
+            "\nNotes: Counts computed from MTS_Dataset_TrainingSet.csv; summaries use the `section_text` field.\n"
+        )
 
 
 if __name__ == "__main__":
     main()
-
-

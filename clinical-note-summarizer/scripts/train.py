@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import argparse
+import shutil
 from pathlib import Path
-from typing import Dict
 
+import evaluate
+import numpy as np
 from datasets import DatasetDict, load_from_disk
 from transformers import (
     AutoModelForSeq2SeqLM,
@@ -14,18 +16,12 @@ from transformers import (
     Seq2SeqTrainingArguments,
     set_seed,
 )
-import evaluate
-import numpy as np
-import shutil
-
 
 DEFAULT_MODEL = "google/flan-t5-base"
-DEFAULT_TOKENIZED_PATH = (
-    Path("clinical-note-summarizer/data/processed/flan-t5-base/tokenized_dataset")
+DEFAULT_TOKENIZED_PATH = Path(
+    "clinical-note-summarizer/data/processed/flan-t5-base/tokenized_dataset"
 )
-DEFAULT_SPLITS_PATH = (
-    Path("clinical-note-summarizer/data/processed/flan-t5-base/splits")
-)
+DEFAULT_SPLITS_PATH = Path("clinical-note-summarizer/data/processed/flan-t5-base/splits")
 DEFAULT_EXPORT_DIR = Path("models/flan-t5-bhc-summarizer")
 
 
@@ -57,7 +53,9 @@ def parse_args() -> argparse.Namespace:
     )
 
     # Training hyperparameters
-    parser.add_argument("--output_dir", type=str, default="clinical-note-summarizer/runs/flan-t5-base")
+    parser.add_argument(
+        "--output_dir", type=str, default="clinical-note-summarizer/runs/flan-t5-base"
+    )
     parser.add_argument("--num_train_epochs", type=float, default=1.0)
     parser.add_argument("--per_device_train_batch_size", type=int, default=2)
     parser.add_argument("--per_device_eval_batch_size", type=int, default=2)
@@ -105,7 +103,7 @@ def load_splits_or_fallback(splits_dir: Path, tokenized_dir: Path) -> DatasetDic
 def build_compute_metrics(tokenizer) -> callable:
     rouge = evaluate.load("rouge")
 
-    def compute_metrics(eval_pred) -> Dict[str, float]:
+    def compute_metrics(eval_pred) -> dict[str, float]:
         predictions, labels = eval_pred
         # Decode predictions
         decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
