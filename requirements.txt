@@ -1,6 +1,8 @@
+# Lightweight requirements for running EDA notebooks/scripts in the repo root.
+# For the full application stack (FastAPI service, training), install
+# clinical-note-summarizer/requirements.txt instead.
 requests==2.32.3
 pandas>=2.2.3
 matplotlib==3.9.2
 seaborn==0.13.2
 notebook==7.2.2
-

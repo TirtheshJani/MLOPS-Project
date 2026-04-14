@@ -5,12 +5,10 @@ import argparse
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Tuple
 
 import pandas as pd
 from datasets import Dataset, Features, Value
 from transformers import AutoTokenizer
-
 
 DEFAULT_MODEL = "google/flan-t5-base"
 DEFAULT_MAX_INPUT_LEN = 2048
@@ -103,7 +101,9 @@ def build_hf_dataset(df: pd.DataFrame, input_col: str, target_col: str) -> Datas
     if input_col not in df.columns:
         raise KeyError(f"Missing input column '{input_col}' in CSV; available: {list(df.columns)}")
     if target_col not in df.columns:
-        raise KeyError(f"Missing target column '{target_col}' in CSV; available: {list(df.columns)}")
+        raise KeyError(
+            f"Missing target column '{target_col}' in CSV; available: {list(df.columns)}"
+        )
 
     processed_df = pd.DataFrame(
         {
@@ -119,10 +119,10 @@ def build_hf_dataset(df: pd.DataFrame, input_col: str, target_col: str) -> Datas
 
 def tokenize_examples(
     tokenizer: AutoTokenizer,
-    example: Dict[str, str],
+    example: dict[str, str],
     max_input_len: int,
     max_target_len: int,
-) -> Dict[str, list]:
+) -> dict[str, list]:
     model_inputs = tokenizer(
         example["input_text"],
         max_length=max_input_len,
@@ -173,12 +173,10 @@ def prepare_and_save_dataset(cfg: PreprocessConfig):
     )
 
     # Replace pad token ids with -100 in labels for loss masking
-    def mask_label_padding(batch: Dict[str, list]) -> Dict[str, list]:
+    def mask_label_padding(batch: dict[str, list]) -> dict[str, list]:
         labels = batch["labels"]
         pad_token_id = tokenizer.pad_token_id
-        masked = [
-            [(tok if tok != pad_token_id else -100) for tok in seq] for seq in labels
-        ]
+        masked = [[(tok if tok != pad_token_id else -100) for tok in seq] for seq in labels]
         batch["labels"] = masked
         return batch
 

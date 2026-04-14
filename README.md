@@ -1,322 +1,301 @@
-# 🏥 MLOps Project: Clinical Note Summarizer
+# Clinical Note Summarizer — MLOps on GKE
 
-[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
-[![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)](https://kubernetes.io/)
-[![Google Cloud](https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white)](https://cloud.google.com/)
-[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![CI](https://github.com/TirtheshJani/MLOPS-Project/actions/workflows/ci.yaml/badge.svg)](https://github.com/TirtheshJani/MLOPS-Project/actions/workflows/ci.yaml)
+[![CD](https://github.com/TirtheshJani/MLOPS-Project/actions/workflows/cd.yaml/badge.svg)](https://github.com/TirtheshJani/MLOPS-Project/actions/workflows/cd.yaml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-261230.svg)](https://github.com/astral-sh/ruff)
 
-> **End-to-End MLOps for Healthcare NLP**  
-> A production-grade HealthTech application that summarizes complex clinical notes into concise, patient-friendly summaries using FLAN-T5 and modern MLOps practices.
+> **End-to-end MLOps for healthcare NLP.** A FLAN-T5 clinical-note summarization
+> service with a FastAPI backend, React frontend, Docker image, Kubernetes
+> manifests, and GitHub Actions pipelines for GKE Autopilot.
 
----
-
-## 📊 Project Overview
-
-This project demonstrates a complete **MLOps workflow** for deploying a clinical note summarization service. It bridges the gap between ML research and production deployment, featuring:
-
-- 🤖 **FLAN-T5** fine-tuned for medical summarization
-- ⚡ **FastAPI** backend with async inference
-- 🎨 **React frontend** for intuitive user experience
-- 🐳 **Docker containerization** for consistency
-- ☁️ **GKE Autopilot deployment** for scalability
-- 🔄 **CI/CD with GitHub Actions** for automation
-
-### Complete ML Pipeline
-```
-Data → Model Training → API → Docker → Kubernetes → CI/CD → Monitoring
-```
+> ⚠️ **Disclaimer:** Informational demo only. Not a medical device and not
+> intended for use with real PHI.
 
 ---
 
-## 🛠️ Tech Stack
+## Table of Contents
 
-### Machine Learning
-| Tool | Purpose |
-|------|---------|
-| PyTorch | Deep learning framework |
-| Transformers | Hugging Face model library |
-| Datasets | Data processing |
-
-### Backend
-| Tool | Purpose |
-|------|---------|
-| FastAPI | High-performance API framework |
-| Pydantic | Data validation |
-| Uvicorn | ASGI server |
-
-### Frontend
-| Tool | Purpose |
-|------|---------|
-| React (Vite) | Modern UI framework |
-| Axios | HTTP client |
-| React Hook Form | Form management |
-
-### DevOps
-| Tool | Purpose |
-|------|---------|
-| Docker | Containerization |
-| GKE Autopilot | Managed Kubernetes |
-| GitHub Actions | CI/CD automation |
-| Artifact Registry | Container storage |
+- [Highlights](#highlights)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Quick Start](#quick-start)
+- [API](#api)
+- [Configuration](#configuration)
+- [Project Structure](#project-structure)
+- [Training Pipeline](#training-pipeline)
+- [Deployment](#deployment)
+- [CI/CD](#cicd)
+- [Development](#development)
+- [Dataset](#dataset)
+- [Roadmap](#roadmap)
+- [License](#license)
 
 ---
 
-## 🏗️ Architecture
+## Highlights
+
+- **Production-style FastAPI service** with health/readiness probes, Pydantic
+  validation, per-IP rate limiting, and a consistent JSON error envelope.
+- **Graceful model fallback** — the service falls back to a stub summarizer
+  if the model cannot be loaded so probes and the UI still work.
+- **Multi-stage Dockerfile** with a non-root runtime user.
+- **Kubernetes manifests** (Deployment, Service, HPA) tuned for GKE Autopilot.
+- **GitHub Actions CI/CD** — lint, test, build frontend, push image to
+  Artifact Registry via Workload Identity Federation, and roll out to GKE.
+- **Reproducible training pipeline** for fine-tuning FLAN-T5 on MTS-Dialog.
+- **Typed Python, ruff linting, pre-commit hooks, and coverage reports.**
+
+## Architecture
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────────┐
-│   React UI  │────▶│  FastAPI    │────▶│  FLAN-T5 Model  │
-│   (Vite)    │◀────│   Backend   │◀────│  (HF Transform) │
-└─────────────┘     └─────────────┘     └─────────────────┘
-       │
-       ▼
-┌─────────────────────────────────────────────────────────┐
-│                  Docker Container                        │
-│         (Single image: API + Built UI)                  │
-└─────────────────────────────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────┐
-│              GKE Autopilot Cluster                       │
-│         (Load Balancer + HPA + Rollouts)                │
-└─────────────────────────────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────┐
-│              GitHub Actions CI/CD                        │
-│    (Test → Build → Push → Deploy → Verify)              │
-└─────────────────────────────────────────────────────────┘
+ ┌──────────────┐     ┌──────────────┐     ┌───────────────────┐
+ │  React (Vite)│────▶│   FastAPI    │────▶│  FLAN-T5 (HF)     │
+ │    UI        │◀────│   Backend    │◀────│  Transformers     │
+ └──────────────┘     └──────────────┘     └───────────────────┘
+         │                  │
+         └──── served from ─┘
+                  │
+                  ▼
+         ┌────────────────┐
+         │ Docker image   │  (multi-stage; API + built SPA)
+         └────────────────┘
+                  │
+                  ▼
+         ┌────────────────────────────────┐
+         │ GKE Autopilot                  │
+         │ Deployment · Service · HPA     │
+         └────────────────────────────────┘
+                  ▲
+                  │
+         ┌────────────────────────────────┐
+         │ GitHub Actions                 │
+         │ lint → test → build → deploy   │
+         └────────────────────────────────┘
 ```
 
----
+## Tech Stack
 
-## 🚀 Getting Started
+| Layer | Tools |
+| --- | --- |
+| Modeling | PyTorch · Transformers · FLAN-T5 · datasets · evaluate (ROUGE) |
+| Backend  | FastAPI · Pydantic v2 · Uvicorn |
+| Frontend | React 19 · Vite 7 |
+| Infra    | Docker · Kubernetes · GKE Autopilot · Artifact Registry |
+| CI/CD    | GitHub Actions · Workload Identity Federation |
+| Quality  | pytest · pytest-cov · ruff · mypy · pre-commit |
+
+## Quick Start
 
 ### Prerequisites
-- Python 3.11+
-- Node.js 18+
-- Docker Desktop
-- Google Cloud SDK (for deployment)
-- kubectl
+- Python **3.11+**
+- Node.js **20+** (for the frontend)
+- Docker (optional, for containerised runs)
 
-### Quick Start
+### 1. Clone
 
-#### 1. Clone and Setup
 ```bash
 git clone https://github.com/TirtheshJani/MLOPS-Project.git
 cd MLOPS-Project
 ```
 
-#### 2. Backend Only (Development)
-```bash
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .\.venv\Scripts\Activate.ps1
+### 2. Backend
 
-# Install dependencies
+```bash
+python -m venv .venv
+source .venv/bin/activate                 # Windows: .\.venv\Scripts\Activate.ps1
 pip install -r clinical-note-summarizer/requirements.txt
 
-# Run development server
-uvicorn clinical-note-summarizer.app.main:app --reload --host 0.0.0.0 --port 8000
+# Run against the public google/flan-t5-base checkpoint (default)
+PYTHONPATH=clinical-note-summarizer \
+  uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Test the API:
+Smoke test:
+
 ```bash
-curl -X POST http://localhost:8000/summarize \
-  -H "Content-Type: application/json" \
-  -d '{"text": "Patient presents with chest pain..."}'
+curl -s -X POST http://localhost:8000/summarize \
+  -H 'Content-Type: application/json' \
+  -d '{"text": "Patient admitted for pneumonia. Treated and discharged."}'
 ```
 
-#### 3. Frontend Development
+### 3. Frontend
+
 ```bash
 cd web
 npm ci
-npm run dev
+npm run dev          # http://localhost:5173
 ```
 
-#### 4. Docker Build
-```bash
-# Build frontend assets
-cd web
-npm ci
-VITE_API_BASE_URL="" npm run build
-cd ..
+### 4. Standalone Streamlit demo (optional)
 
-# Build Docker image
+For a zero-infra local walkthrough without FastAPI/React:
+
+```bash
+pip install -r demo_requirements.txt
+streamlit run demo_app.py
+```
+
+### 5. Docker
+
+```bash
+# Build the SPA first so the image ships with static assets
+( cd web && npm ci && VITE_API_BASE_URL="" npm run build )
+
 docker build -t clinical-summarizer-app .
-
-# Run container
 docker run --rm -p 8000:8000 clinical-summarizer-app
 ```
 
----
+## API
 
-## 📁 Repository Structure
+OpenAPI docs are available at `/docs` (Swagger UI) and `/redoc`.
+
+| Method | Path         | Description                                   |
+| ------ | ------------ | --------------------------------------------- |
+| GET    | `/health`    | Liveness probe (`status`, `model_loaded`)      |
+| GET    | `/ready`     | Readiness probe                                |
+| POST   | `/summarize` | Generate summary from a clinical note          |
+
+### `POST /summarize`
+
+```jsonc
+// Request
+{
+  "text": "Patient presents with chest pain ...",
+  "max_new_tokens": 256,        // 1..1024 (default 256)
+  "temperature": 0.0            // 0.0..1.0 (default 0 → beam search)
+}
+
+// Response
+{ "summary": "..." }
+
+// Error envelope (all HTTPException responses)
+{ "error": { "code": 413, "message": "Input too large. Max 10,000 characters." } }
+```
+
+## Configuration
+
+All configuration is via environment variables.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `MODEL_DIR` | `models/flan-t5-bhc-summarizer` or `google/flan-t5-base` | Local path or HF repo id to load |
+| `USE_FAST_TOKENIZER` | `""` | Set `true` to prefer fast tokenizers (useful in CI) |
+| `CORS_ORIGINS` | `http://localhost:3000,http://localhost:5173` | Comma-separated allow-list |
+| `RATE_LIMIT_MAX` | `30` | Max requests per window per IP |
+| `RATE_LIMIT_WINDOW_SEC` | `60` | Window size in seconds |
+| `MAX_INPUT_CHARS` | `10000` | Hard cap on `/summarize` input size |
+| `FRONTEND_DIST` | `web/dist` | Location of the built SPA to serve |
+
+## Project Structure
 
 ```
 MLOPS-Project/
-├── .github/
-│   └── workflows/
-│       ├── ci.yaml              # Continuous Integration
-│       └── cd.yaml              # Continuous Deployment
+├── .github/workflows/          # CI, CD, auth-check pipelines
 ├── clinical-note-summarizer/
-│   ├── app/
-│   │   └── main.py              # FastAPI application
-│   ├── models/                  # Model artifacts (gitignored)
+│   ├── app/main.py             # FastAPI service
+│   ├── scripts/                # Training + preprocessing
+│   ├── tests/                  # pytest suite
 │   └── requirements.txt
-├── web/                         # React frontend
-│   ├── src/
-│   ├── dist/                    # Build output
-│   └── package.json
-├── kubernetes/
-│   ├── deployment.yaml
-│   ├── service.yaml
-│   └── hpa.yaml
-├── notebooks/                   # Training notebooks
-├── scripts/                     # Utility scripts
-├── docs/                        # Documentation
-├── Dockerfile
-├── README.md
+├── web/                        # React + Vite frontend
+├── kubernetes/                 # Deployment, Service, HPA, SA
+├── scripts/                    # Dataset download + EDA
+├── notebooks/                  # EDA notebooks
+├── docs/                       # Dataset rationale + notes
+├── Dockerfile                  # Multi-stage production image
+├── pyproject.toml              # Ruff / pytest / mypy config
+├── .pre-commit-config.yaml
 └── LICENSE
 ```
 
----
+## Training Pipeline
 
-## 💡 Key Features
+```
+preprocess → tokenize (2048/256) → fine-tune FLAN-T5 → ROUGE eval → export
+```
 
-### API Capabilities
-- `POST /summarize` - Generate clinical summaries
-- Rate limiting per IP
-- Configurable generation parameters
-- Consistent error handling
-
-### Frontend Features
-- Clean, intuitive interface
-- Example clinical notes
-- Compare mode (input vs. output)
-- Export results (txt, md)
-- PHI warnings
-
-### Production Features
-- Health check endpoints
-- Horizontal Pod Autoscaling
-- Rolling deployments
-- Workload Identity Federation
-
----
-
-## 📊 Dataset
-
-**Microsoft MTS-Dialog Dataset**
-- Public, de-identified medical dialogues
-- Creative Commons license
-- Suitable for clinical summarization training
-
-See `docs/dataset_rationale_mts_dialog.md` for selection rationale.
-
----
-
-## 🔧 Model Training
-
-### Training Pipeline
-1. **Preprocessing**: Add "summarize: " prefix
-2. **Tokenization**: 2048 input / 256 output tokens
-3. **Fine-tuning**: FLAN-T5 on medical dialogues
-4. **Evaluation**: ROUGE metrics
-5. **Export**: Save to `models/`
-
-### Training Command
 ```bash
-python scripts/train.py \
+python clinical-note-summarizer/scripts/preprocess_t5.py \
+  --input data/primary/mts-dialog \
+  --output data/processed
+
+python clinical-note-summarizer/scripts/train.py \
   --model google/flan-t5-base \
-  --dataset mts-dialog \
+  --data data/processed \
   --output-dir models/flan-t5-bhc-summarizer
 ```
 
----
+## Deployment
 
-## 🚢 Deployment
+Apply manifests to your GKE cluster:
 
-### GKE Deployment
 ```bash
-# Tag and push image
-docker tag clinical-summarizer-app \
-  gcr.io/PROJECT_ID/clinical-summarizer-app:latest
-docker push gcr.io/PROJECT_ID/clinical-summarizer-app:latest
-
-# Update deployment
-kubectl set image deployment/clinical-summarizer-deployment \
-  clinical-summarizer-app=gcr.io/PROJECT_ID/clinical-summarizer-app:latest
-
-# Verify rollout
+kubectl apply -f kubernetes/
 kubectl rollout status deployment/clinical-summarizer-deployment
 ```
 
----
+Update the running image (also automated by `cd.yaml` on every push to `main`):
 
-## 🔄 CI/CD Pipeline
-
-### Continuous Integration
-```yaml
-# .github/workflows/ci.yaml
-1. Checkout code
-2. Setup Python
-3. Install dependencies
-4. Build frontend
-5. Run pytest
+```bash
+kubectl set image deployment/clinical-summarizer-deployment \
+  clinical-summarizer-app=<AR_HOST>/<PROJECT>/<REPO>/clinical-summarizer-app:<sha>
 ```
 
-### Continuous Deployment
-```yaml
-# .github/workflows/cd.yaml
-1. Build frontend
-2. Docker build & push
-3. Update GKE deployment
-4. Verify rollout status
+## CI/CD
+
+`.github/workflows/ci.yaml` runs on every push/PR:
+
+1. **Lint** — `ruff check` + `ruff format --check`.
+2. **Backend tests** — `pytest` with a tiny HF model for speed, coverage enabled.
+3. **Frontend** — `npm ci`, `npm run lint`, `npm run build`.
+
+`.github/workflows/cd.yaml` on push to `main`:
+
+1. Build the SPA.
+2. Authenticate to GCP via **Workload Identity Federation** (no JSON keys).
+3. Build and push the Docker image to Artifact Registry.
+4. `kubectl set image` + `kubectl rollout status`.
+
+## Development
+
+```bash
+# Install dev dependencies (ruff, mypy, pytest, pre-commit)
+pip install -r clinical-note-summarizer/requirements.txt
+pip install pre-commit
+
+# Enable pre-commit hooks
+pre-commit install
+
+# Run the full check locally
+ruff check .
+ruff format --check .
+MODEL_DIR=hf-internal-testing/tiny-random-t5 USE_FAST_TOKENIZER=true \
+  PYTHONPATH=clinical-note-summarizer pytest -q
 ```
 
----
+See [CONTRIBUTING.md](CONTRIBUTING.md) for a fuller workflow.
 
-## 📈 Monitoring
+## Dataset
 
-### Health Endpoints
-- `GET /health` - Service health check
-- `GET /ready` - Readiness probe
-- Metrics via Prometheus (optional)
+**Microsoft MTS-Dialog** — public, de-identified clinician–patient dialogues
+released under Creative Commons. See
+[`docs/dataset_rationale_mts_dialog.md`](docs/dataset_rationale_mts_dialog.md)
+for selection rationale and
+[`docs/eda_summary_mts_dialog.md`](docs/eda_summary_mts_dialog.md) for EDA
+highlights.
 
-### Logging
-- Structured JSON logging
-- Cloud Logging integration
-- Request tracing
+## Roadmap
 
----
+- [ ] Structured JSON logs + request ids
+- [ ] Prometheus `/metrics` endpoint and Grafana dashboard
+- [ ] Batch inference endpoint
+- [ ] Canary deploys via Argo Rollouts
+- [ ] Distributed rate limiting backed by Redis
 
-## 🔒 Security
+## License
 
-- **No PHI in demos** - Synthetic data only
-- **Rate limiting** - Prevent abuse
-- **Input validation** - Pydantic models
-- **GCP Workload Identity** - Secure authentication
+MIT — see [LICENSE](LICENSE).
 
----
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-**Disclaimer**: This is an informational demo only; not a medical device. Do not process real PHI.
-
----
-
-## 📧 Contact
-
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/tirthesh-jani)
-[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/TirtheshJani)
-
----
-
-<p align="center">
-  <i>Production-grade MLOps for healthcare AI 🏥🤖</i>
-</p>
+Contact: [LinkedIn](https://www.linkedin.com/in/tirthesh-jani) ·
+[GitHub](https://github.com/TirtheshJani)

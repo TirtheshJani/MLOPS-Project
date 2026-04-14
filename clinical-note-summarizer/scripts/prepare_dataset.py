@@ -46,10 +46,12 @@ def main() -> None:
 
     ds: Dataset = load_from_disk(str(input_dir))
     split = ds.train_test_split(test_size=args.test_size, seed=args.seed, shuffle=True)
-    dsd = DatasetDict({
-        "train": split["train"],
-        "validation": split["test"],
-    })
+    dsd = DatasetDict(
+        {
+            "train": split["train"],
+            "validation": split["test"],
+        }
+    )
 
     dsd.save_to_disk(str(output_dir))
     print(f"Saved DatasetDict with splits to: {output_dir}")

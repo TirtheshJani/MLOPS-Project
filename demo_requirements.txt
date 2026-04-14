@@ -1,7 +1,8 @@
+# Minimal dependencies for the standalone Streamlit demo (demo_app.py).
+# Run with:  streamlit run demo_app.py
 streamlit>=1.28.0
 transformers>=4.30.0
 torch>=2.0.0
 numpy>=1.24.0
 pandas>=2.0.0
 plotly>=5.15.0
-requests>=2.31.0
