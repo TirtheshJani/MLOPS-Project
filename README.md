@@ -1,7 +1,6 @@
 # Clinical Note Summarizer — MLOps on GKE
 
 [![CI](https://github.com/TirtheshJani/MLOPS-Project/actions/workflows/ci.yaml/badge.svg)](https://github.com/TirtheshJani/MLOPS-Project/actions/workflows/ci.yaml)
-[![CD](https://github.com/TirtheshJani/MLOPS-Project/actions/workflows/cd.yaml/badge.svg)](https://github.com/TirtheshJani/MLOPS-Project/actions/workflows/cd.yaml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-261230.svg)](https://github.com/astral-sh/ruff)
@@ -235,7 +234,7 @@ kubectl apply -f kubernetes/
 kubectl rollout status deployment/clinical-summarizer-deployment
 ```
 
-Update the running image (also automated by `cd.yaml` on every push to `main`):
+Update the running image (also done by `cd.yaml` when run manually, see [CI/CD](#cicd)):
 
 ```bash
 kubectl set image deployment/clinical-summarizer-deployment \
@@ -250,7 +249,10 @@ kubectl set image deployment/clinical-summarizer-deployment \
 2. **Backend tests** — `pytest` with a tiny HF model for speed, coverage enabled.
 3. **Frontend** — `npm ci`, `npm run lint`, `npm run build`.
 
-`.github/workflows/cd.yaml` on push to `main`:
+`.github/workflows/cd.yaml` is manual-only (`workflow_dispatch`, run it from the
+Actions tab) until the GCP project behind the existing `GCP_*` repo secrets has
+billing enabled and the GKE cluster exists. The comment at the top of the file shows how to restore the
+push-to-`main` trigger. When run, it does:
 
 1. Build the SPA.
 2. Authenticate to GCP via **Workload Identity Federation** (no JSON keys).
