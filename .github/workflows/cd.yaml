@@ -1,10 +1,10 @@
 name: CD
 
-# Manual-only for now. Every push-triggered run failed at "Build and push
-# image" because billing is disabled on the GCP project behind
+# Manual-only for now. Every push-triggered run since February 2026 failed at
+# "Build and push image" because billing is disabled on the GCP project behind
 # secrets.GCP_PROJECT_ID, so Artifact Registry rejects the push.
-# To deploy on every push to main again, once billing, the GKE cluster and
-# the GCP_* secrets are in place, add back under "on:":
+# To deploy on every push to main again, once that project has billing enabled
+# and the GKE cluster exists, add back under "on:":
 #   push:
 #     branches: [ main ]
 on:

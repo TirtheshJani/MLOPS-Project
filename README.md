@@ -250,8 +250,8 @@ kubectl set image deployment/clinical-summarizer-deployment \
 3. **Frontend** — `npm ci`, `npm run lint`, `npm run build`.
 
 `.github/workflows/cd.yaml` is manual-only (`workflow_dispatch`, run it from the
-Actions tab) until a billed GCP project, the GKE cluster and the `GCP_*` repo
-secrets exist. The comment at the top of the file shows how to restore the
+Actions tab) until the GCP project behind the existing `GCP_*` repo secrets has
+billing enabled and the GKE cluster exists. The comment at the top of the file shows how to restore the
 push-to-`main` trigger. When run, it does:
 
 1. Build the SPA.
