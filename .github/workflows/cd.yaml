@@ -1,8 +1,14 @@
 name: CD
 
+# Manual-only for now. Every push-triggered run failed at "Build and push
+# image" because billing is disabled on the GCP project behind
+# secrets.GCP_PROJECT_ID, so Artifact Registry rejects the push.
+# To deploy on every push to main again, once billing, the GKE cluster and
+# the GCP_* secrets are in place, add back under "on:":
+#   push:
+#     branches: [ main ]
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch:
 
 env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
